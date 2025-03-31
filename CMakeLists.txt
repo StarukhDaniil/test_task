@@ -17,6 +17,9 @@ set(PROJECT_SOURCES
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
+        myconstants.h
+        communication.cpp
+        communication.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

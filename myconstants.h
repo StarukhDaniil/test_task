@@ -2,7 +2,6 @@
 #define MYCONSTANTS_H
 
 #include <qtypes.h>
-#include <QChar>
 
 namespace myConstants {
 inline constexpr int basicMinBtnWidth = 150;
@@ -20,12 +19,21 @@ inline constexpr int basicMinLabelHeight = 30;
 inline constexpr int basicMaxLabelWidth = 200;
 inline constexpr int basicMaxLabelHeight = 30;
 
+inline constexpr int basicMinListWidth = 150;
+inline constexpr int basicMinListHeight = 150;
+inline constexpr int basicMaxListWidth = 450;
+inline constexpr int basicMaxListHeight = 450;
+
 inline constexpr quint16 requiredVendorIdentifier = 0x04b4;
 inline constexpr quint16 requiredProductIdentifier = 0x05;
 
 // length of basic command for controller without parameters
 inline constexpr qint16 basicCmdLen = 4;
 inline constexpr qint16 BDAddrLen = 6;
+
+inline constexpr qsizetype resetWorkerIndex = 0;
+inline constexpr qsizetype readBDAddrWorkerIndex = 1;
+inline constexpr qsizetype writeBDAddrWorkerIndex = 2;
 }
 
 #endif // MYCONSTANTS_H

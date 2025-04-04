@@ -2,9 +2,9 @@
 #include "myconstants.h"
 #include <QList>
 #include <QSerialPort>
-#include <QMessageBox>
 #include <QTime>
 #include <QRegularExpression>
+#include <QSerialPortInfo>
 #include <QThread>
 
 // checks if the string is valid for converting it to BD_ADDR
@@ -17,7 +17,9 @@ bool validToConvertToBDAddr(const QString& input) {
 
 // function that converts string input to address in bytes
 QByteArray convertBDAddr(const QString& input) {
-    return QByteArray::fromHex(input.toUtf8());
+    QByteArray addr = QByteArray::fromHex(input.toUtf8());
+    std::reverse(addr.begin(), addr.end());
+    return addr;
 }
 
 // sends required bytes for reset
@@ -31,6 +33,7 @@ qint64 writeReset(QSerialPort& port) {
     static const char command[] = {0x01, 0x03, 0x0C, 0x00};
     qint64 sentBytes = port.write(command, myConstants::basicCmdLen);
     port.flush();
+    qDebug() << QThread::currentThreadId();
     return sentBytes;
 }
 
@@ -93,26 +96,26 @@ QSerialPort* findPort() {
 
             // opening the port and checking if the port was failed to open
             if (!port->open(QSerialPort::ReadWrite)) {
-                qDebug() << "Failed to open the port" << port->portName() << "at" << QTime::currentTime();
+                // qDebug() << "Failed to open the port" << port->portName() << "at" << QTime::currentTime();
                 continue;
             }
 
             // checking if host failed to write bytes
             if (writeReset(*port) != 4) {
-                qDebug() << "Failed to send :(" << port->portName();
+                // qDebug() << "Failed to send :(" << port->portName();
                 port->close();
                 continue;
             }
 
             // checking if controller responded to the command
             if (!port->waitForReadyRead(3000)) {
-                qDebug() << "Failed to read :(: " << port->portName();
+                // qDebug() << "Failed to read :(: " << port->portName();
                 port->close();
                 continue;
             }
-            QByteArray response = port->readAll();
+            port->clear();
 
-            qDebug() << response.toHex();
+            // qDebug() << response.toHex();
             return port;
         }
     }

@@ -20,6 +20,8 @@ set(PROJECT_SOURCES
         myconstants.h
         communication.cpp
         communication.h
+        communicationmanager.h
+        communicationmanager.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

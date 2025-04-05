@@ -63,6 +63,7 @@ MainWindow::MainWindow(QWidget *parent)
     centralWidget->setLayout(layout);
     setCentralWidget(centralWidget);
 
+    // connecting writeBDAddrBtn to sending input
     QObject::connect(writeAddrBtn, &QPushButton::clicked, this, &MainWindow::askForInput,
                      Qt::DirectConnection);
 }
@@ -92,6 +93,7 @@ void MainWindow::askForInput() {
     emit writeBDAddr(addrInput->text());
 }
 
+// adds output to QListWidget
 void MainWindow::writeResponse(const QString& response) {
     output->addItem(response);
 }

@@ -13,9 +13,12 @@ CommunicationManager::CommunicationManager(MainWindow& mainWindow, QObject *pare
     , mainWindow(&mainWindow)
     , ownThread(new QThread(this))
 {
-    /* moving communication manager to its own thread,
+    /* moving communication manager and port to its own thread,
      * so there is no lag in uiwhen waiting for response */
     this->moveToThread(ownThread);
+    if (port != nullptr) {
+        port->moveToThread(ownThread);
+    }
     ownThread->start();
 
     // connecting buttons with their functionality
@@ -42,6 +45,9 @@ void CommunicationManager::reset() {
             emit writeResponse("Failed to find the controller");
             return;
         }
+
+        // if port is successfullt found, adding it to own thread
+        port->moveToThread(ownThread);
     }
 
     // asking controller for reading BD_ADDR
@@ -52,6 +58,8 @@ void CommunicationManager::reset() {
         emit writeResponse("Failed to read :(");
         return;
     }
+
+    // asking to write response
     emit writeResponse(port->readAll().toHex(' '));
 }
 
@@ -65,6 +73,9 @@ void CommunicationManager::readBDAddr() {
             emit writeResponse("Failed to find the controller");
             return;
         }
+
+        // if port is successfullt found, adding it to own thread
+        port->moveToThread(ownThread);
     }
 
     // asking controller for reading BD_ADDR
@@ -75,6 +86,8 @@ void CommunicationManager::readBDAddr() {
         emit writeResponse("Failed to read :(");
         return;
     }
+
+    // asking to write response
     emit writeResponse(port->readAll().toHex(' '));
 }
 
@@ -88,6 +101,9 @@ void CommunicationManager::writeBDAddr(const QString& input) {
             emit writeResponse("Failed to find the controller");
             return;
         }
+
+        // if port is successfullt found, adding it to own thread
+        port->moveToThread(ownThread);
     }
     if (!validToConvertToBDAddr(input)) {
         emit writeResponse("Incorrect input");
@@ -102,6 +118,8 @@ void CommunicationManager::writeBDAddr(const QString& input) {
         emit writeResponse("Failed to read :(");
         return;
     }
+
+    // asking to write response
     emit writeResponse(port->readAll().toHex(' '));
 }
 

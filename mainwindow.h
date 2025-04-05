@@ -42,6 +42,7 @@ public slots:
     void writeResponse(const QString& response);
     void askForInput();
 signals:
+    // sends input from input QLineEdit
     void writeBDAddr(const QString& input);
 };
 #endif // MAINWINDOW_H

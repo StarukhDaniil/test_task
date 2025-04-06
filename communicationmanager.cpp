@@ -50,6 +50,12 @@ void CommunicationManager::reset() {
         port->moveToThread(ownThread);
     }
 
+    // checking if the port is opened
+    if (!port->isOpen()) {
+        emit writeResponse("Error: port is closed");
+        return;
+    }
+
     // asking controller for reading BD_ADDR
     writeReset(*port);
 
@@ -76,6 +82,13 @@ void CommunicationManager::readBDAddr() {
 
         // if port is successfullt found, adding it to own thread
         port->moveToThread(ownThread);
+    }
+
+
+    // checking if the port is opened
+    if (!port->isOpen()) {
+        emit writeResponse("Error: port is closed");
+        return;
     }
 
     // asking controller for reading BD_ADDR
@@ -105,6 +118,14 @@ void CommunicationManager::writeBDAddr(const QString& input) {
         // if port is successfullt found, adding it to own thread
         port->moveToThread(ownThread);
     }
+
+    // checking if the port is opened
+    if (!port->isOpen()) {
+        emit writeResponse("Error: port is closed");
+        return;
+    }
+
+    // checking if the entered input is valid for converting to BD_ADDR
     if (!validToConvertToBDAddr(input)) {
         emit writeResponse("Incorrect input");
         return;

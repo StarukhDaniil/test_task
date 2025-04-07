@@ -5,7 +5,7 @@
 #include <QString>
 #include <QByteArray>
 
-QSerialPort* findPort();
+QSerialPort* findPort(QObject* parent = nullptr);
 
 qint64 writeReset(QSerialPort& port);
 

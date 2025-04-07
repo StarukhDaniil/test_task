@@ -31,10 +31,7 @@ qint64 writeReset(QSerialPort& port) {
 
     // declaring and initializing command to send
     static const char command[] = {0x01, 0x03, 0x0C, 0x00};
-    qint64 sentBytes = port.write(command, myConstants::basicCmdLen);
-    port.flush();
-    qDebug() << QThread::currentThreadId();
-    return sentBytes;
+    return port.write(command, myConstants::basicCmdLen);
 }
 
 // sends required bytes for reading the BD_ADDR
@@ -46,9 +43,7 @@ qint64 writeReadBDAddr(QSerialPort& port) {
 
     // declaring and initializing command to send
     static const char command[] = {0x01, 0x09, 0x10, 0x00};
-    qint64 sentBytes = port.write(command, myConstants::basicCmdLen);
-    port.flush();
-    return sentBytes;
+    return port.write(command, myConstants::basicCmdLen);
 }
 
 qint64 writeWriteBDAddr(QSerialPort& port, const QByteArray& addr) {
@@ -69,18 +64,16 @@ qint64 writeWriteBDAddr(QSerialPort& port, const QByteArray& addr) {
         cmdAddrPtr[i] = addr[i];
     }
 
-    qint64 sentBytes = port.write(command, myConstants::basicCmdLen + myConstants::BDAddrLen);
-    port.flush();
-    return sentBytes;
+    return port.write(command, myConstants::basicCmdLen + myConstants::BDAddrLen);
 }
 
-QSerialPort* findPort() {
+QSerialPort* findPort(QObject* parent) {
 
     // creating list of available ports
     QList<QSerialPortInfo> availablePorts = QSerialPortInfo::availablePorts();
 
     // initializing and adjusting port that will be returned
-    QSerialPort* port = new QSerialPort();
+    QSerialPort* port = new QSerialPort(parent);
     port->setBaudRate(QSerialPort::Baud115200);
     port->setDataBits(QSerialPort::Data8);
     port->setFlowControl(QSerialPort::HardwareControl);
@@ -96,29 +89,32 @@ QSerialPort* findPort() {
 
             // opening the port and checking if the port was failed to open
             if (!port->open(QSerialPort::ReadWrite)) {
-                // qDebug() << "Failed to open the port" << port->portName() << "at" << QTime::currentTime();
+                qDebug() << "Failed to open the port" << port->portName();
                 continue;
             }
 
             // checking if host failed to write bytes
             if (writeReset(*port) != 4) {
-                // qDebug() << "Failed to send :(" << port->portName();
+                qDebug() << "Failed to send :(" << port->portName();
                 port->close();
                 continue;
             }
 
-            // checking if controller responded to the command
-            if (!port->waitForReadyRead(3000)) {
-                // qDebug() << "Failed to read :(: " << port->portName();
-                port->close();
-                continue;
+            // checking if controller responded and waiting for it to sends expected number of bytes
+            while (port->bytesAvailable() < myConstants::expectedResetResponseLen) {
+                if (!port->waitForReadyRead(1000)) {
+                    port->close();
+                    continue;
+                }
             }
+
+            // clearing read buffer
             port->clear();
 
-            // qDebug() << response.toHex();
             return port;
         }
     }
 
+    delete port;
     return nullptr;
 }

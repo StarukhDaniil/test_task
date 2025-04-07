@@ -30,6 +30,10 @@ inline constexpr quint16 requiredProductIdentifier = 0x05;
 // length of basic command for controller without parameters
 inline constexpr qint16 basicCmdLen = 4;
 inline constexpr qint16 BDAddrLen = 6;
+
+inline constexpr qint64 expectedResetResponseLen = 7;
+inline constexpr qint64 expectedReadBDAddrResponseLen = 13;
+inline constexpr qint64 expectedWriteBDAddrResponseLen = 7;
 }
 
 #endif // MYCONSTANTS_H

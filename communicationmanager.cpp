@@ -1,10 +1,11 @@
 #include "communicationmanager.h"
 #include "communication.h"
 #include "mainwindow.h"
+#include "myconstants.h"
 
 CommunicationManager::CommunicationManager(MainWindow& mainWindow, QObject *parent)
     : QObject{parent}
-    , port(findPort())
+    , port(findPort(this))
     , resetBtn(mainWindow.getResetBtn())
     , readBDAddrBtn(mainWindow.getReadBDAddrBtn())
     , writeBDAddrBtn(mainWindow.getWriteBDAddrBtn())
@@ -18,8 +19,13 @@ CommunicationManager::CommunicationManager(MainWindow& mainWindow, QObject *pare
     this->moveToThread(ownThread);
     if (port != nullptr) {
         port->moveToThread(ownThread);
+        QObject::connect(ownThread, &QThread::finished, port, &QObject::deleteLater);
     }
     ownThread->start();
+
+    // QObject::connect(ownThread, &QThread::finished, this, &QObject::deleteLater);
+    // QObject::connect(ownThread, &QThread::finished, port, &QObject::deleteLater);
+    // QObject::connect(ownThread, &QThread::finished , ownThread, &QObject::deleteLater);
 
     // connecting buttons with their functionality
     QObject::connect(resetBtn, &QPushButton::clicked,
@@ -31,7 +37,7 @@ CommunicationManager::CommunicationManager(MainWindow& mainWindow, QObject *pare
 
     // connecting reading output from controller with displaying output
     QObject::connect(this, &CommunicationManager::writeResponse,
-                     &mainWindow, &MainWindow::writeResponse);
+                     &mainWindow, &MainWindow::writeResponse, Qt::QueuedConnection);
 }
 
 
@@ -59,10 +65,12 @@ void CommunicationManager::reset() {
     // asking controller for reading BD_ADDR
     writeReset(*port);
 
-    // checking if controller responded
-    if (!port->waitForReadyRead(1000)) {
-        emit writeResponse("Failed to read :(");
-        return;
+    // checking if controller responded and waiting for it to sends expected number of bytes
+    while (port->bytesAvailable() < myConstants::expectedResetResponseLen) {
+        if (!port->waitForReadyRead(1000)) {
+            emit writeResponse("Failed to read :(");
+            return;
+        }
     }
 
     // asking to write response
@@ -94,10 +102,12 @@ void CommunicationManager::readBDAddr() {
     // asking controller for reading BD_ADDR
     writeReadBDAddr(*port);
 
-    // checking if controller responded
-    if (!port->waitForReadyRead(1000)) {
-        emit writeResponse("Failed to read :(");
-        return;
+    // checking if controller responded and waiting for it to sends expected number of bytes
+    while (port->bytesAvailable() < myConstants::expectedReadBDAddrResponseLen) {
+        if (!port->waitForReadyRead(1000)) {
+            emit writeResponse("Failed to read :(");
+            return;
+        }
     }
 
     // asking to write response
@@ -134,10 +144,12 @@ void CommunicationManager::writeBDAddr(const QString& input) {
     // asking controller for reading BD_ADDR
     writeWriteBDAddr(*port, convertBDAddr(input));
 
-    // checking if controller responded
-    if (!port->waitForReadyRead(1000)) {
-        emit writeResponse("Failed to read :(");
-        return;
+    // checking if controller responded and waiting for it to sends expected number of bytes
+    while (port->bytesAvailable() < myConstants::expectedWriteBDAddrResponseLen) {
+        if (!port->waitForReadyRead(1000)) {
+            emit writeResponse("Failed to read :(");
+            return;
+        }
     }
 
     // asking to write response
@@ -145,8 +157,7 @@ void CommunicationManager::writeBDAddr(const QString& input) {
 }
 
 CommunicationManager::~CommunicationManager() {
-    ownThread->quit();
     ownThread->wait();
-    port->close();
-    delete port;
+    ownThread->quit();
+    delete ownThread;
 }
